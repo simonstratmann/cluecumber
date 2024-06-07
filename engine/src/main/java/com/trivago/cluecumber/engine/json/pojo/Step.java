@@ -18,9 +18,7 @@ package com.trivago.cluecumber.engine.json.pojo;
 import com.google.gson.annotations.SerializedName;
 import com.trivago.cluecumber.engine.rendering.pages.renderering.RenderingUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,6 +37,8 @@ public class Step extends ResultMatch {
     private int collapseLevel = 0;
     private int index = 0;
     private boolean hasSubSections = false;
+
+    private static final Map<String, String> stepMatchToNameWithArgumentPlaceholders = new HashMap<>();
 
     /**
      * Check if there are before or after step hooks with content.
@@ -149,16 +149,19 @@ public class Step extends ResultMatch {
      * @return The scenario name with empty arguments.
      */
     public String returnNameWithArgumentPlaceholders() {
-        String tmpName = getName();
-        List<Argument> arguments = getArguments();
-        for (int i = arguments.size() - 1; i >= 0; i--) {
-            String argument = arguments.get(i).getVal();
-            if (argument != null) {
-                tmpName = tmpName.replaceFirst(Pattern.quote(argument), Matcher.quoteReplacement("{}"));
+        return stepMatchToNameWithArgumentPlaceholders.computeIfAbsent(getMatch().getLocation(), matchName -> {
+            String tmpName = getName();
+            List<Argument> arguments = getArguments();
+            for (int i = arguments.size() - 1; i >= 0; i--) {
+                String argument = arguments.get(i).getVal();
+                if (argument != null) {
+                    tmpName = tmpName.replaceFirst(Pattern.quote(argument), Matcher.quoteReplacement("{}"));
+                }
             }
-        }
-        return tmpName;
+            return tmpName;
+        });
     }
+
 
     /**
      * Get the step keyword (Given, When, Then etc.).
